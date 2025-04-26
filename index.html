@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="iRDG • Удобный генератор РАПП">
+  <meta property="og:title" content="iRDG • Генератор РАПП 💚 Создавайте РАПП в пару кликов и сохраняйте историю автоматически !">
+  <meta property="og:description" content="iRDG • Генератор РАПП 💚 Создавайте РАПП в пару кликов и сохраняйте историю автоматически !">
+  <meta property="og:image" content="img/title.png">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="img/title.png">
+  <meta name="twitter:card" content="img/title.png" />
+  <meta name="twitter:image" content="img/title.png" />
+
+  <title>iRDG • Генератор РАПП</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap" rel="stylesheet">
+  <link href="Roboto-Regular.ttf">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.28/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+  <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.2/css/all.css">
+  <link rel="shortcut icon" class="favIcon" href="img/iRDG.png" type="image/x-icon">
+</head>
+<body>
+  <header class="onloading">
+    <nav class="menuSelection">
+      <label for="rapp-1" class="menuItem" id="menuItem-1">
+        <input type="radio" class="currentGeneratorType-selection" id="rapp-1" name="rapp" checked>
+        <div class="menuItemBadge">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <p class="menuItemTitle">Магистрали</p>
+        <div class="menuItemInfo-container">
+          <p class="menuItemInfo-title">РАПП на Магистраль</p>
+          <p class="menuItemInfo-descripton">Документ для передачи заказа(ов) на другие СЦ, если нет системной возможности</p>
+        </div>
+      </label>
+      <label for="rapp-2" class="menuItem" id="menuItem-2">
+        <input type="radio" class="currentGeneratorType-selection" id="rapp-2" name="rapp">
+        <div class="menuItemBadge">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <p class="menuItemTitle">Курьеры</p>
+        <div class="menuItemInfo-container">
+          <p class="menuItemInfo-title">РАПП на Курьера</p>
+          <p class="menuItemInfo-descripton">Документ для передачи заказа(ов) в доставку курьером или СРК, если нет системной возможности</p>
+        </div>
+      </label>
+      <label for="rapp-3" class="menuItem" id="menuItem-3">
+        <input type="radio" class="currentGeneratorType-selection" id="rapp-3" name="rapp">
+        <div class="menuItemBadge">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <p class="menuItemTitle">Мерчи</p>
+        <div class="menuItemInfo-container">
+          <p class="menuItemInfo-title">РАПП на Мерчей</p>
+          <p class="menuItemInfo-descripton">Документ для передачи заказа(ов) мерчу, если нет системной возможности</p>
+        </div>
+      </label>
+      <label for="rapp-4" class="menuItem" id="menuItem-4">
+        <input type="radio" class="currentGeneratorType-selection" id="rapp-4" name="rapp">
+        <div class="menuItemBadge">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <p class="menuItemTitle">Аномалии</p>
+        <div class="menuItemInfo-container">
+          <p class="menuItemInfo-title">РАПП на Аномалии</p>
+          <p class="menuItemInfo-descripton">Документ для передачи аномалий на ЕВСЦ</p>
+        </div>
+      </label>
+      <label for="rapp-5" class="menuItem" id="menuItem-5">
+        <input type="radio" class="currentGeneratorType-selection" id="rapp-5" name="rapp">
+        <div class="menuItemBadge">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <p class="menuItemTitle">Засылы / Дубли</p>
+        <div class="menuItemInfo-container">
+          <p class="menuItemInfo-title">РАПП на Засылы / Дубли</p>
+          <p class="menuItemInfo-descripton">Документ для передачи дублей / засылов на другие СЦ</p>
+        </div>
+      </label>
+    </nav>
+    <div class="callMenu">
+      <div class="cellMenu-container">
+        <button class="callToSupport pegasusTooltip onLoadMenu">
+          <i class="fa-solid fa-headset"></i>
+        </button>
+        <button class="menuToggle pegasusTooltip onLoadMenu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <h1 id="currentGeneratorType-title" class="onLoadMenu">Магистрали</h1>
+      </div>
+      <div class="cellMenu-container">
+        <label for="disableTooltip" class="pegasusTooltip onLoadMenu">
+          <input type="checkbox" id="disableTooltip" checked>
+          <div class="disableTooltip-buttton-container">
+            <div class="disableTooltip-buttton-ball"></div>
+          </div>
+          <p>Подсказки</p>
+        </label>
+      </div>
+    </div>
+    <canvas id="headerArrowCanvas"></canvas>
+  </header>
+  <div class="loadingWrapper">
+    <div class="loadingBlock">
+      <div class="loadingContainer">
+        <div class="ball">
+          <i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="loadingBlock loadingBlock-blur">
+      <div class="loadingContainer">
+        <div class="ball">
+          <i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+        <div class="spinner">
+          <svg viewBox="0 0 500 500">
+            <path id="curve" fill="transparent" d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"></path>
+            <text width="600">
+              <textPath xlink:href="#curve">•  Загрузка  •</textPath>
+            </text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modalWindow"></div>
+
+  <div class="labelGenerator-modal">
+    <div class="labelGenerator-window labelOnLoad">
+        <div class="labelGenerator-content">
+            <div class="labelGenerator-preview">
+                <h1>Предварительный просмотр:</h1>
+                <div class="labelGenerator-previewBoxWrapper">
+                  <div class="labelGenerator-previewBox"></div>
+                </div>
+            </div>
+            <div class="labelGenerator-settings">
+                <div class="labelGenerator-settingsWrapper">
+                    <h1>Настройки:</h1>
+                    <div class="labelGenerator-settingsBox">
+                        <div class="labelGenerator-field">
+                            <label for="moveFrom">Отправитель:</label>
+                            <div class="labelGenerator-inputWrapper">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="text" id="moveFrom" placeholder="Отправитель" value="СЦ Воронеж" readonly>
+                            </div>
+                        </div>
+                        <div class="labelGenerator-field">
+                            <label for="moveKross">Кросс-док через:</label>
+                            <input type="text" id="moveKross" placeholder="Кросс-док через" value="Кросс-док СЦ">
+                        </div>
+                        <div class="labelGenerator-field">
+                            <label for="moveTo">Получатель:</label>
+                            <input type="text" id="moveTo" placeholder="Получатель" value="СЦ Получатель">
+                        </div>
+                    </div>
+                </div>
+                <div class="labelGenerator-divider"></div>
+                <div class="labelGenerator-settingsWrapper">
+                  <h1>Печать:</h1>
+                  <div class="labelGenerator-printBox">
+                      <div class="labelGenerator-field">
+                          <label for="labelID">Номер акта:</label>
+                          <div class="labelGenerator-inputWrapper">
+                              <i class="fa-solid fa-lock"></i>
+                              <input type="text" id="labelID" placeholder="Отправитель" value="" readonly>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="labelGenerator-printBox">
+                    <div class="labelGenerator-buttons">
+                        <button type="submit" class="labelGenerator-reGenerate">
+                            <i class="fa-solid fa-rotate fa-spin-pulse"></i>
+                        </button>
+                        <a class="labelGenerator-print" href="#">
+                            <i class="fa-solid fa-print fa-beat-fade"></i>
+                        </a>
+                    </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div id="calendarModalWindow">
+    <div class="calendar calendarOnLoad" id="calendar">
+      <div class="calendar-controls">
+        <button id="prevMonth" class="changeMonth">
+          <i class="fa-solid fa-left"></i>
+        </button>
+        <button id="nextMonth" class="changeMonth">
+          <i class="fa-solid fa-right"></i>
+        </button>
+        <button id="todayBtn">Сегодня</button>
+        <button id="tomorrowBtn">Завтра</button>
+        <button id="noDayBtn">Без дня</button>
+      </div>
+      <div class="calendar-nav-container">
+        <div class="calendar-nav">
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">01</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">02</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">03</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">04</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">05</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">06</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">07</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">08</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">09</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">10</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">11</button>
+          </div>
+          <div class="calendar-nav-buttonContainer">
+            <button class="calendar-nav-sellction">12</button>
+          </div>
+        </div>
+      </div>
+      <div class="calendar-wrapper">
+        <div class="calendar-month">
+          <span id="currentMonth1" class="currentMonthTitle"></span>
+          <div class="calendar-days" id="calendarDays1"></div>
+        </div>
+        <div class="calendar-month">
+          <span id="currentMonth2" class="currentMonthTitle"></span>
+          <div class="calendar-days" id="calendarDays2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <canvas id="containerCanvas"></canvas>
+    <form id="pdf-form">
+      <h1 class="generatorTite onLoadText">Генерация PDF-файла</h1>
+      <div class="documentDataWrapper onLoad">
+        <div class="documentDataBlock">
+          <div class="documentDataContainer">
+            <div class="documentDataContainer-outCorner"></div>
+            <div class="documentDataItem documentNumber onLoad">
+              <label for="actNumber">Акт приёма-передачи №:</label>
+              <i class="fa-solid fa-lock scNameLock"></i>
+              <input type="text" id="actNumber" class="pegasusTooltip" placeholder="Введите номер акта" value="iRDG-m:00000000" required readonly>
+            </div>
+            <div class="documentDataItem onLoad">
+              <label for="actTime">Дата:</label>
+              <div class="date-picker-container">
+                <div class="custom-date-display" id="dateDisplay">Выбор даты</div>
+              </div>
+            </div>
+            <div class="documentDataItem onLoad">
+              <button type="submit" class="reGenerateDocument pegasusTooltip">
+                <i class="fa-solid fa-rotate fa-spin-pulse"></i>
+              </button>
+            </div>
+            <div class="documentDataItem onLoad">
+              <button class="pdfPrint-labels printLabels pegasusTooltip">
+                <i class="fa-solid fa-note-sticky fa-bounce"></i>
+              </button>
+            </div>
+            <div class="documentDataItem onLoad">
+              <button type="button" class="pdfPrint printDocument pegasusTooltip">
+                <i class="fa-solid fa-print fa-beat-fade"></i>
+              </button>
+            </div>
+          </div>
+          <div class="documentDataContainer">
+            <div class="documentDataItem fromScSelection onLoad">
+              <label for="sender">Отправитель:</label>
+              <i class="fa-solid fa-lock scNameLock"></i>
+              <input type="text" id="sender" placeholder="Введите отправителя" required value="СЦ Воронеж" class="pegasusTooltip" readonly>
+            </div>
+            <div class="documentDataItem onLoad">
+              <label for="recipients">Получатель:</label>
+              <div class="dropdown">
+                <input type="text" id="recipient" placeholder="Выберите получателя..." autocomplete="off" value="СЦ Домодедово ЕВСЦ">
+                <div class="dropdown-list" id="dropdownList"></div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="textAreaDashboard onLoad">
+        <i class="fa-solid fa-hourglass-half"></i>
+        <p class="dashboardInfoText">Предварительная загрузка пакетов</p>
+        <span id="generationTime"></span>
+      </div>
+      <div id="container" class="onLoad" style="display: flex;">
+        <div class="textAreaControls onLoad">
+          <div class="textAreaControls-section">
+            <h1 class="textAreaControls-sectionTitle">Редактирование:</h1>
+            <div class="textAreaControls-sectionBlock">
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="allSelect-btn">
+                <i class="fa-solid fa-check-double"></i>
+              </button>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="clearAll-btn">
+                <i class="fa-regular fa-trash"></i>
+              </button>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="clearAllEmptyLines-btn">
+                <i class="fa-regular fa-trash-xmark"></i>
+              </button>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="textareaUndo-btn">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="textareaRedo-btn">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+            </div>
+          </div>
+          <div class="textAreaControls-button-devider onLoadItemDevider"></div>
+          <div class="textAreaControls-section">
+            <h1 class="textAreaControls-sectionTitle">Форматирование:</h1>
+            <div class="textAreaControls-sectionBlock">
+              <div class="textAreaControls-generatorType-6">
+                <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="textareaChangeOrderType" disabled>
+                  <i class="fa-solid fa-arrows-spin"></i>
+                  <i class="fa-solid fa-circle-xmark availabilityIcon"></i>
+                </button>
+                <div class="textareaChangeOrderType-menu">
+                  <button class="textareaChangeOrderType-menu-button" id="changeOrderType-prev">
+                    <i class="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <input type="text" id="changeOrderType-input" value="Дубль" readonly>
+                  <button class="textareaChangeOrderType-menu-button" id="changeOrderType-next">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="textAreaControls-fixLayout">
+                <div class="fixLayout-animation"></div>
+                <button class="textAreaControls-button onLoadItem onLoadItemAnimation  pegasusTooltip" id="textareaFixLayout-btn" stauts="isAvalible">
+                  <i class="fa-solid fa-broom"></i>
+                </button>
+              </div>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation  pegasusTooltip" id="textareaAddCommentSection-btn" isActive="false">
+                <i class="fa-solid fa-comment-lines"></i>
+                <i class="fa-solid fa-circle-xmark controlsButton-active"></i>
+                <i class="fa-solid fa-circle-check availabilityIcon"></i>
+              </button>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="backlightSwitch-btn" isActive="true">
+                <i class="fa-solid fa-palette"></i>
+                <i class="fa-solid fa-circle-check controlsButton-active"></i>
+              </button>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation  pegasusTooltip" id="textareaSmartFormating-btn" isActive="true">
+                <i class="fa-solid fa-brain-circuit"></i>
+                <i class="fa-solid fa-circle-check controlsButton-active"></i>
+              </button>
+            </div>
+          </div>
+          <div class="textAreaControls-button-devider onLoadItemDevider"></div>
+          <div class="textAreaControls-section">
+            <h1 class="textAreaControls-sectionTitle">Ключ:</h1>
+            <div class="textAreaControls-sectionBlock">
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="textareaInsertKey-btn">
+                <i class="fa-solid fa-lock-keyhole-open"></i>
+              </button>
+              <button class="textAreaControls-button onLoadItem onLoadItemAnimation pegasusTooltip" id="textareaGetKey-btn">
+                <i class="fa-solid fa-key-skeleton"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="textAreaContainer">
+          <div id="line-numbers" class="onLoad">
+            <div>1</div>
+          </div>
+          <textarea class="allOrders onLoad" placeholder="″Номер заказа″ + ″Код грузоместа″" iscolored="true"></textarea>
+          <div class="hints-container onLoad">
+            <h1 class="hints-container-title">Подсказка</h1>
+            <!-- <div class="hints-container-icon pegasusTooltip">
+              <i class="fa-solid fa-question"></i>
+            </div> -->
+            <div class="hints-container-block hints-card-container">
+              <div class="hints-container-item">
+                <h2 class="hints-container-item-title">
+                  Автораспознавание грузомест:
+                </h2>
+                <p class="hints-container-item-description">
+                  Генератор автоматически распознаёт текст, который начинается с <span class="hints-description-span-1">"YP"</span>, <span class="hints-description-span-1">"P0"</span>, <span class="hints-description-span-1">"F0254"</span> как грузоместо. Если в строчке, в которой указаны данные значения нет номера заказа, вместо него ставится прочерк
+                </p>
+              </div>
+              <div class="hints-container-item">
+                <h2 class="hints-container-item-title">
+                  Автозаполнение типа ГМ:
+                </h2>
+                <p class="hints-container-item-description">
+                  При генерации документа на отгрузку Засылов, Дублей и LOST заказов, если указать тип грузоместа (<span class="hints-description-span-2">"Номер заказа"</span> <span class="hints-description-span-3">"код грузоместа"</span> <span class="hints-description-span-4">"Дубль/Засыл/LOST"</span>) после грузоместа, генератор автоматически проставит его в строке
+                </p>
+              </div>
+              <div class="hints-container-item">
+                <h2 class="hints-container-item-title">
+                  Заказы без ГМ:
+                </h2>
+                <p class="hints-container-item-description">
+                  Если в поле ввода будет вписан любой возвратный шк или лот, его грузоместо автоматически не будет учитываться генератором, в РАППе две ячейки <span class="hints-description-span-2">"Номер заказ"</span> и <span class="hints-description-span-1">"Код грузоместа"</span> будут объединены в одну
+                </p>
+              </div>
+              <div class="hints-container-item">
+                <h2 class="hints-container-item-title">
+                  Пропуск пустых строк:
+                </h2>
+                <p class="hints-container-item-description">
+                  Каждая строка в которой указана информация о заказе обозначается порядковым номером строки, если строка пустая или содержат пробелы без каких либо других символов, нумерация не учитывается и отмечается символом <span class="hints-description-span-10">"×"</span>
+                </p>
+              </div>
+              <div class="hints-container-item">
+                <h2 class="hints-container-item-title">
+                  Автораспознование иных типов отправлений:
+                </h2>
+                <p class="hints-container-item-description">
+                  Генератор распознаёт Лоты, ТОТы, Полибоксы и Аномалии
+                  <br>
+                  <br> <span class="hints-description-span-5">"F1254..."</span> <span class="hints-description-span-4">"ЛОТ"</span>
+                  <br> <span class="hints-description-span-6">"F2254..."</span> <span class="hints-description-span-4">"ТОТ (оборотная тара)"</span>
+                  <br> <span class="hints-description-span-7">"F3000..."</span> <span class="hints-description-span-4">"Полибокс"</span>
+                  <br> <span class="hints-description-span-8">"FA254..."</span> <span class="hints-description-span-9">"Тикет"</span> <span class="hints-description-span-4">"Описание"</span>
+                </p>
+              </div>
+              <div class="hints-container-item">
+                <h2 class="hints-container-item-title">
+                  Удаление ссылки тикета:
+                </h2>
+                <p class="hints-container-item-description">
+                  Генератор автоматически обрезает ссылку на аномалию, если такая присутствыет
+                  <br>
+                  <br> Ввод:
+                  <br> <span class="hints-description-span-9">"https://st.yandex-team.ru/ANOMALIISC-000001"</span>
+                  <br> Вывод:
+                  <br> <span class="hints-description-span-9">"ANOMALIISC-000001"</span>
+                </p>
+              </div>
+              <div class="hints-container-item">
+                <h2 class="hints-container-item-title">
+                  Чистая правда:
+                </h2>
+                <p class="hints-container-item-description">
+                  Ильяшенко - клоун 🤡
+                </p>
+              </div>
+            </div>
+            <div class="hints-container-block">
+              <div class="hints-container-controls">
+                <button id="changeHintCard-backward">
+                  <i class="fa-duotone fa-solid fa-angles-left"></i>
+                </button>
+                <div class="hints-container-controls-position">
+                  <span></span>
+                </div>
+                <button id="changeHintCard-forward">
+                  <i class="fa-duotone fa-solid fa-angles-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="orders-container">
+      </div>
+    </form>
+
+    <div class="preview">
+      <h1 class="generatorTite onLoadText" id="topAnchor">Предварительный просмотр</h1>
+      <div id="canvasContainer" class="onLoad">
+        <div class="previewScaleControl">
+          <div class="previewScaleControlContainer">
+            <button class="previewScale-btn previewScale-minus-btn">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <p class="scalePersent">100%</p>
+            <button class="previewScale-btn previewScale-plus-btn">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="previewWelcomeMessage">
+          <h1>Введите номер(а) заказа(ов) для начала генерации документа</h1>
+          <div class="previewWelcomeMessage-icon">
+            <i class="fa-solid fa-hourglass"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notification-wrapper"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/gh/sphilee/jsPDF-CustomFonts-support/dist/jspdf.customfonts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/sphilee/jsPDF-CustomFonts-support/dist/fonts/pt-sans-normal.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
