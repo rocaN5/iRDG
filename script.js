@@ -19,6 +19,33 @@ let localBlob
 
 //A- Global variables END
 
+
+//~ Обновление ссылки BOLOB
+
+function updateBlobLinks() {
+  const dashboardInfoText = document.querySelector(".dashboardInfoText");
+  const pdfPrintLink       = document.querySelector("a.pdfPrint");
+  const labelPrintLink     = document.querySelector("a.labelGenerator-print");
+
+  if (pdfDocumentLinkBLOB) {
+    // показываем обрезанную ссылку в инфоблоке
+    if (dashboardInfoText) {
+      const uuid = pdfDocumentLinkBLOB.substring(pdfDocumentLinkBLOB.lastIndexOf('/') + 1);
+      dashboardInfoText.innerText = uuid;
+    }
+    // делаем ссылку на сам PDF
+    if (pdfPrintLink) {
+      pdfPrintLink.href = pdfDocumentLinkBLOB;
+    }
+    // и для лейблов
+    if (labelPrintLink) {
+      labelPrintLink.href = pdfDocumentLinkBLOB;
+    }
+  }
+}
+
+//~ Обновление ссылки BOLOB END
+
 //~ LOAD
 window.onload = () => {
   showMenu()
@@ -381,30 +408,36 @@ currentGeneratorType_selection.forEach(input => {
       direction__input.value = "Не выбран";
       let title = "";
       getDataAndMakeOrderRow(event);
+      const header = document.querySelector("header")
 
       if (input.id === "rapp-1") {
           title = "Магистрали";
           currentRappGeneratorType = 1;
+          header.setAttribute("rapptype", "m")
           changeOrderType_disabled()
           extraComments_enabled()
       } else if (input.id === "rapp-2") {
           title = "Курьеры / СРК";
           currentRappGeneratorType = 2;
+          header.setAttribute("rapptype", "c")
           changeOrderType_disabled()
           extraComments_enabled()
       } else if (input.id === "rapp-3") {
           title = "Мерчи";
           currentRappGeneratorType = 3;
+          header.setAttribute("rapptype", "s")
           changeOrderType_disabled()
           extraComments_enabled()
       } else if (input.id === "rapp-4") {
           title = "Аномалии";
           currentRappGeneratorType = 4;
+          header.setAttribute("rapptype", "a")
           changeOrderType_disabled()
           extraComments_disabled()
       } else if (input.id === "rapp-5") {
           title = "Засылы / Дубли / Lost / Невыкуп";
           currentRappGeneratorType = 5;
+          header.setAttribute("rapptype", "z")
           changeOrderType_enabled()
           extraComments_disabled()
       } else {
@@ -985,28 +1018,38 @@ function textAreaOverLay__updateCanvas() {
             const isExtraCommentInactive = document.getElementById("textareaAddCommentSection-btn")?.getAttribute("isactive") === "false";
             const isRappType123 = [1, 2, 3].includes(currentRappGeneratorType);
             const shouldStrikeRed = isExtraCommentInactive && isRappType123;
-  
-            if(toggleStates.smartFormating === true){
-              if (/^(F0254|0|72|YP|P0)/.test(line)) {
-                  firstWordColor = '#ccff00';
-                  secondWordColor = '#00ff68';
-                  otherWordsColor = '#fff';
-              } else if (/^(F1254)/.test(line)) {
-                  firstWordColor = '#00dcff';
-                  secondWordColor = '#fff';
-                  otherWordsColor = '#fff';
-              } else if (/^(F2254)/.test(line)) {
-                  firstWordColor = '#00ff22';
-                  secondWordColor = '#fff';
-                  otherWordsColor = '#fff';
-              } else if (/^(F3000000000)/.test(line)) {
-                  firstWordColor = '#fc0';
-                  secondWordColor = '#fff';
-                  otherWordsColor = '#fff';
-              } else if (/^(FA254)/.test(line)) {
-                  firstWordColor = '#ff005c';
-                  secondWordColor = '#ff00ae';
-                  otherWordsColor = '#fff';
+            if (toggleStates.smartFormating === true) {
+              // Special case: если во втором слове (cargoCode) есть префикс "LO-"
+              const tempWords = line.split(/ +/);
+              if (tempWords[1] && tempWords[1].startsWith('LO-') || tempWords[1] && tempWords[1].startsWith('FF-')) {
+                firstWordColor  = '#ccff00';  // цвет для orderNumber
+                secondWordColor = '#00ff68';  // цвет для cargoCode
+                otherWordsColor = '#fff';
+              }
+              else if (/^(F0254|0|72|YP|P0)/.test(line)) {
+                firstWordColor  = '#ccff00';
+                secondWordColor = '#00ff68';
+                otherWordsColor = '#fff';
+              }
+              else if (/^(F1254)/.test(line)) {
+                firstWordColor  = '#00dcff';
+                secondWordColor = '#fff';
+                otherWordsColor = '#fff';
+              }
+              else if (/^(F2254)/.test(line)) {
+                firstWordColor  = '#00ff22';
+                secondWordColor = '#fff';
+                otherWordsColor = '#fff';
+              }
+              else if (/^(F3000000000)/.test(line)) {
+                firstWordColor  = '#fc0';
+                secondWordColor = '#fff';
+                otherWordsColor = '#fff';
+              }
+              else if (/^(FA254)/.test(line)) {
+                firstWordColor  = '#ff005c';
+                secondWordColor = '#ff00ae';
+                otherWordsColor = '#fff';
               }
             }else{
               firstWordColor = '#00ff68';
@@ -2084,6 +2127,7 @@ function takeDataToLabels() {
 
 //~ Данные для генератора этикеток END
 
+
 //~ Превью label
 
 document.querySelector('.labelGenerator-reGenerate').addEventListener('click', generateLabelPDF);
@@ -2160,13 +2204,20 @@ function generateLabelPDF() {
         }
     }
     
-    // Генерация Blob и рендер в canvas
-    const pdfBlob = docLabeles.output('blob');
+    const pdfBlob = doc.output("blob");
     const blobUrl = URL.createObjectURL(pdfBlob);
+    // сохраняем и в локальную, и в глобальную (для открывания из Telegram-кнопки)
+    pdfDocumentLinkBLOB       = blobUrl;
+    window.pdfDocumentLinkBLOB = blobUrl;
+    // сразу обновляем UI
+    updateBlobLinks();
     
+    // для совместимости: сразу обновляем атрибут target и href
     const printLink = document.querySelector('a.labelGenerator-print');
-    
-    printLink.target = '_blank';
+    if (printLink) {
+      printLink.target = '_blank';
+      printLink.href   = blobUrl;
+    }
     
     for (let i = 0; i < 4; i++) {
         const canvas = document.createElement('canvas');
@@ -2815,11 +2866,11 @@ ordersContainer.innerHTML = '';
         if (parts.length > 0) {
           const firstPart = parts[0];
 
-          if (parts.length > 1 && parts[1].startsWith('LO-')) {
+          if (parts.length > 1 && parts[1].startsWith('LO-') || parts.length > 1 && parts[1].startsWith('FF-')) {
               cargoCode = parts[0];
               orderNumber = parts[1];
               oneRow = false;
-          }else if (firstPart.startsWith('LO-')) {
+          }else if (firstPart.startsWith('LO-') || firstPart.startsWith('FF-')) {
               orderNumber = firstPart;
               cargoCode = parts.slice(1).join(' ');
               oneRow = false;
@@ -2940,11 +2991,11 @@ ordersContainer.innerHTML = '';
           orderNumber = firstPart;
           cargoCode = firstPart;
           oneRow = false;
-        } else if (parts.length > 1 && parts[1].startsWith('LO-')) {
+        } else if (parts.length > 1 && parts[1].startsWith('LO-') || parts.length > 1 && parts[1].startsWith('FF-')) {
             cargoCode = parts[0];
             orderNumber = parts[1];
             oneRow = false;
-        } else if (firstPart.startsWith('LO-')) {
+        } else if (firstPart.startsWith('LO-') || firstPart.startsWith('FF-')) {
             orderNumber = firstPart;
             cargoCode = parts.slice(1).join(' ').split(' ')[0]; // Только первая часть после пробела
             oneRow = false;
@@ -3005,20 +3056,8 @@ ordersContainer.innerHTML = '';
         }      
       }
 
-      if (currentRappGeneratorType === 1 || currentRappGeneratorType === 2 || currentRappGeneratorType === 3){
-        if(toggleStates.extraCommentColumn === true){
-          orderNumber = parts[0] || '';
-          cargoCode = parts.length > 1 ? parts[1] : '';
-  
-          if (cargoCode.includes(' ')) {
-              let cargoParts = cargoCode.split(' ');
-              cargoCode = cargoParts[0]; // Берем только первую часть
-              extraComment = cargoParts.slice(1).join(' '); // Остальное уходит в extraComment
-          } else {
-            extraComment = parts.length > 2 ? parts.slice(2).join(' ') : '';
-          }
-        }
-      }
+
+
   
     
       const newOrderRow = document.createElement("div");
@@ -4070,16 +4109,16 @@ function generatePDF() {
     );
   }
 
-  // Обновление превью
-
   const pdfBlob = doc.output("blob");
-
-  // Создаём ссылку на Blob
   const blobUrl = URL.createObjectURL(pdfBlob);
-
-  // Сохраняем ссылку в переменную для дальнейшего использования
+  
+  // 1) Сохраняем и в локальную, и в глобальную переменную
+  pdfDocumentLinkBLOB       = blobUrl;
   window.pdfDocumentLinkBLOB = blobUrl;
-
+  
+  // 2) Немедленно обновляем UI (dashboardInfoText и ссылки)
+  updateBlobLinks();
+  
   const pdfPrintLink = document.querySelector(".pdfPrint");
   if (pdfPrintLink) {
     setTimeout(() => {
@@ -4626,7 +4665,7 @@ async function renderPDF(pdfData) {
         textAreaDashboard.insertBefore(statusDone, textAreaDashboard.firstChild);
         let pdfPrint = document.querySelector("a.pdfPrint");
         if (pdfPrint) {
-          document.querySelector('.dashboardInfoText').innerText = `${localBlob}`
+          updateBlobLinks();
         }    
       }else{
         const statusDone = document.createElement("i");
@@ -4634,7 +4673,7 @@ async function renderPDF(pdfData) {
         textAreaDashboard.insertBefore(statusDone, textAreaDashboard.firstChild);
         let pdfPrint = document.querySelector("a.pdfPrint");
         if (pdfPrint) {
-          document.querySelector('.dashboardInfoText').innerText = `${localBlob}`
+          updateBlobLinks();
         }    
       }
     }

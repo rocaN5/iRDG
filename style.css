@@ -1679,12 +1679,28 @@ header.onLoading{
   transition: 300ms;
 }
 
+label#menuItem-1{
+  --currentColor: #cf0;
+}
+label#menuItem-2{
+  --currentColor: #ffbb00;
+}
+label#menuItem-3{
+  --currentColor: #00ffbf;
+}
+label#menuItem-4{
+  --currentColor: #ff0034;
+}
+label#menuItem-5{
+  --currentColor: #f000ff;
+}
+
 label.menuItem input{
   display: none;
 }
 
 label.menuItem:has(input:checked){
-  border-color: #cf0 !important;
+  border-color: var(--currentColor) !important;
 }
 
 label.menuItem::before{
@@ -1707,7 +1723,7 @@ label.menuItem::before{
 }
 
 label.menuItem:has(input:checked)::before {
-  background: #cf0;
+  background: var(--currentColor);
   transform: translateY(0);
   transition: 300ms;
   opacity: 1;
@@ -1729,10 +1745,58 @@ label.menuItem:has(input:checked)::before {
   box-shadow: 0px 0px 10px #000, 0px 0px 10px #000;
 }
 
+.menuItemIcon{
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  bottom: 0;
+  right: 0;
+  background-position: center;
+  background-size: 80%;
+  background-repeat: no-repeat;
+  z-index: 999999999;
+}
+
+label#menuItem-1 .menuItemIcon{
+  background-image: url("img/telegramm image assets/telegram-icon-default.png");
+  transition: 300ms;
+  filter: grayscale(1) brightness(.2);
+}
+
+label#menuItem-2 .menuItemIcon{
+  background-image: url("img/telegramm image assets/telegram-icon-c.png");
+  transition: 300ms;
+  filter: grayscale(1) brightness(.2);
+}
+
+label#menuItem-3 .menuItemIcon{
+  background-image: url("img/telegramm image assets/telegram-icon-m.png");
+  transition: 300ms;
+  filter: grayscale(1) brightness(.2);
+}
+
+label#menuItem-4 .menuItemIcon{
+  background-image: url("img/telegramm image assets/telegram-icon-a.png");
+  transition: 300ms;
+  filter: grayscale(1) brightness(.6);
+}
+
+label#menuItem-5 .menuItemIcon{
+  background-image: url("img/telegramm image assets/telegram-icon-z.png");
+  transition: 300ms;
+  filter: grayscale(1) brightness(.6);
+}
+
 label.menuItem:has(input:checked) .menuItemBadge{
   transition: 300ms;
-  background: #cf0;
+  background: var(--currentColor);
   transform: unset;
+}
+
+label.menuItem:has(input:checked) .menuItemIcon{
+  filter: grayscale(0) brightness(1) !important;
+  transition: 300ms;
 }
 
 header.active .menuItem{
@@ -1746,6 +1810,32 @@ label.menuItem:hover {
   transition: 300ms;
   border-color: #ffffff;
   transform: scale(1.05);
+
+  .menuItemIcon{
+    background-image: url("img/telegramm image assets/telegram-icon-default.png") !important;
+    filter: grayscale(1) brightness(2.0) !important;
+    transition: 300ms;
+  }
+}
+
+label.menuItem:focus-visible:has(input:checked),
+label.menuItem:hover:has(input:checked){
+  &#menuItem-2 .menuItemIcon{
+    background-image: url("img/telegramm image assets/telegram-icon-c.png") !important;
+    transition: 300ms;
+  }
+  &#menuItem-3 .menuItemIcon{
+    background-image: url("img/telegramm image assets/telegram-icon-m.png") !important;
+    transition: 300ms;
+  }
+  &#menuItem-4 .menuItemIcon{
+    background-image: url("img/telegramm image assets/telegram-icon-a.png") !important;
+    transition: 300ms;
+  }
+  &#menuItem-5 .menuItemIcon{
+    background-image: url("img/telegramm image assets/telegram-icon-z.png") !important;
+    transition: 300ms;
+  }
 }
 
 .menuItemInfo-container {
@@ -1848,6 +1938,34 @@ label.menuItem:focus-visible .menuItemInfo-title{
   z-index: -1;
   top: 0px;
   left: 0px;
+  /* background-color: #000000;
+    background-image: repeating-radial-gradient(circle at 0 100%, rgba(27, 27, 30, 0.1), rgba(88, 164, 176, 0.15) 1px, rgba(216, 219, 226, 0.2) 2px, rgba(88, 164, 176, 0.15) 3px, rgba(27, 27, 30, 0.1) 4px), radial-gradient(circle at 0 100%, #ff0034, #ff00346e, #ff003440, #ff003424, #ff003400); */
+    background: linear-gradient(360deg, var(--rappColor), transparent 50%);
+    background-position: 0px 90px;
+    background-repeat: no-repeat;
+    transition: background-color 300ms;
+  }
+
+header{
+  
+  &[rappType="m"]{
+    --rappColor: #cf0;
+  }
+  &[rappType="c"]{
+    --rappColor: #ffbb00;
+  }
+  &[rappType="s"]{
+    --rappColor: #00ffbf;
+  }
+  &[rappType="a"]{
+    --rappColor: #ff0034;
+  }
+  &[rappType="z"]{
+    --rappColor: #f000ff;
+  }
+
+  border-bottom: 1px solid var(--rappColor);
+  transition: 300ms;
 }
 
 header button.menuToggle{
@@ -2745,8 +2863,8 @@ label[for="disableTooltip"] p {
   width: 26px;
   height: 18px;
   border-radius: 20px;
-  background: linear-gradient(45deg, #cf0, #fff700);
-  box-shadow: #cf0 0px 0px 6px 0px;
+  background: linear-gradient(45deg, var(--rappColor), var(--rappColor));
+  box-shadow: var(--rappColor) 0px 0px 6px 0px;
   display: flex;
   align-items: center;
   position: relative;
