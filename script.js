@@ -1932,9 +1932,9 @@ const containerCanvas_ctx = containerCanvas.getContext('2d');
 document.body.style.margin = '0';
 document.body.style.overflow = 'hidden';
 
-let containerCanvas_bgColor = '#2E2E2E';
-let containerCanvas_gridColor = '#232323';
-let containerCanvas_highlightColor = '#5E5E5E';
+let containerCanvas_bgColor = '#000';
+let containerCanvas_gridColor = '#060606';
+let containerCanvas_highlightColor = '#2D2D2D';
 const containerCanvas_gridSize = 50;  // Размер квадрата
 const containerCanvas_gap = 2;  // Расстояние между квадратами
 let containerCanvas_offsetX = 0;
