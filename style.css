@@ -1938,6 +1938,7 @@ label.menuItem:focus-visible .menuItemInfo-title{
   z-index: -1;
   top: 0px;
   left: 0px;
+  height: 100%;
   /* background-color: #000000;
     background-image: repeating-radial-gradient(circle at 0 100%, rgba(27, 27, 30, 0.1), rgba(88, 164, 176, 0.15) 1px, rgba(216, 219, 226, 0.2) 2px, rgba(88, 164, 176, 0.15) 3px, rgba(27, 27, 30, 0.1) 4px), radial-gradient(circle at 0 100%, #ff0034, #ff00346e, #ff003440, #ff003424, #ff003400); */
     background: linear-gradient(360deg, var(--rappColor), transparent 50%);
