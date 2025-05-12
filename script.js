@@ -14,6 +14,7 @@ const currentGeneratorType_title = document.getElementById("currentGeneratorType
 const currentGeneratorType_selection = document.querySelectorAll("input.currentGeneratorType-selection");
 
 let pdfDocumentLinkBLOB = ""
+let labelDocumentLinkBLOB = ""
 let currentHash = ""
 let localBlob
 
@@ -27,22 +28,24 @@ function updateBlobLinks() {
   const pdfPrintLink       = document.querySelector("a.pdfPrint");
   const labelPrintLink     = document.querySelector("a.labelGenerator-print");
 
-  if (pdfDocumentLinkBLOB) {
-    // показываем обрезанную ссылку в инфоблоке
+  if (pdfDocumentLinkBLOB || labelDocumentLinkBLOB) {
+    const blobToShow = pdfDocumentLinkBLOB || labelDocumentLinkBLOB;
+
     if (dashboardInfoText) {
-      const uuid = pdfDocumentLinkBLOB.substring(pdfDocumentLinkBLOB.lastIndexOf('/') + 1);
+      const uuid = blobToShow.substring(blobToShow.lastIndexOf('/') + 1);
       dashboardInfoText.innerText = uuid;
     }
-    // делаем ссылку на сам PDF
-    if (pdfPrintLink) {
+
+    if (pdfPrintLink && pdfDocumentLinkBLOB) {
       pdfPrintLink.href = pdfDocumentLinkBLOB;
     }
-    // и для лейблов
-    if (labelPrintLink) {
-      labelPrintLink.href = pdfDocumentLinkBLOB;
+
+    if (labelPrintLink && labelDocumentLinkBLOB) {
+      labelPrintLink.href = labelDocumentLinkBLOB;
     }
   }
 }
+
 
 //~ Обновление ссылки BOLOB END
 
@@ -2133,118 +2136,106 @@ function takeDataToLabels() {
 document.querySelector('.labelGenerator-reGenerate').addEventListener('click', generateLabelPDF);
 
 function generateLabelPDF() {
-    const isCross = document.querySelector(".labelGenerator-field:has(input#moveKross)")
+  const isCross = document.querySelector(".labelGenerator-field:has(input#moveKross)");
 
-    if(defaultLabel === false){
-      isCross.setAttribute("isCross", true)
-    }else if(defaultLabel === true){
-      isCross.setAttribute("isCross", false)
-    }
+  if (defaultLabel === false) {
+      isCross.setAttribute("isCross", true);
+  } else if (defaultLabel === true) {
+      isCross.setAttribute("isCross", false);
+  }
 
-    const { jsPDF } = window.jspdf;
-    const docLabeles = new jsPDF({ unit: 'cm', format: [10, 10] });
-    docLabeles.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-    docLabeles.setFont('Roboto');
+  const { jsPDF } = window.jspdf;
+  const docLabeles = new jsPDF({ unit: 'cm', format: [10, 10] });
+  docLabeles.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  docLabeles.setFont('Roboto');
 
-    let labelName = currentRappGeneratorType === 1 ? "Заказы" : currentRappGeneratorType === 4 ? "Аномалии" : currentRappGeneratorType === 5 ? "Заказы" : "error"
-    let getDate = document.getElementById("dateDisplay").innerText
-    if(getDate.startsWith("___.")){
-      labelDate = "-unwrited-"
-    } else{
-      labelDate = getDate
-    }
+  let labelName = currentRappGeneratorType === 1 ? "Заказы" :
+                  currentRappGeneratorType === 4 ? "Аномалии" :
+                  currentRappGeneratorType === 5 ? "Заказы" : "error";
 
-    const moveFrom = document.querySelector('#moveFrom').value;
-    const moveKross = document.querySelector('#moveKross').value;
-    const moveTo = document.querySelector('#moveTo').value;
-    const labelID = document.querySelector('#labelID').value;
-    
-    const previewBox = document.querySelector('.labelGenerator-previewBox');
-    previewBox.innerHTML = '';
-    
-    for (let i = 0; i < 4; i++) {
-        if (i > 0) docLabeles.addPage();
-        
-        if(defaultLabel === false){
-          docLabeles.setFontSize(30);
-          docLabeles.text(`${labelName} по РАПП`, 5, 1, { align: 'center', fontStyle: "bold"  });
-  
-          docLabeles.setLineWidth(0.05);
-          docLabeles.rect(0, 1.7, 10, .005);
-          
-          docLabeles.setFontSize(10);
-          docLabeles.text(`Номер РАПП: ${labelID} /// ${labelDate}`, 5, 1.45, { align: 'center', maxWidth: 9 });
-          
+  let getDate = document.getElementById("dateDisplay").innerText;
+  let labelDate = getDate.startsWith("___." ) ? "-unwrited-" : getDate;
+
+  const moveFrom = document.querySelector('#moveFrom').value;
+  const moveKross = document.querySelector('#moveKross').value;
+  const moveTo = document.querySelector('#moveTo').value;
+  const labelID = document.querySelector('#labelID').value;
+
+  const previewBox = document.querySelector('.labelGenerator-previewBox');
+  previewBox.innerHTML = '';
+
+  for (let i = 0; i < 4; i++) {
+      if (i > 0) docLabeles.addPage();
+
+      docLabeles.setFontSize(30);
+      docLabeles.text(`${labelName} по РАПП`, 5, 1, { align: 'center', fontStyle: "bold" });
+
+      docLabeles.setLineWidth(0.05);
+      docLabeles.rect(0, 1.7, 10, .005);
+
+      docLabeles.setFontSize(10);
+      docLabeles.text(`${labelID} /// ${labelDate}`, 5, 1.45, { align: 'center', maxWidth: 9 });
+
+      if (defaultLabel === false) {
           docLabeles.setFontSize(32);
-
           docLabeles.text(moveFrom, 5, 3.0, { align: 'center', maxWidth: 9 });
-          
           docLabeles.addImage('img/labelArrow.png', 'PNG', 4.5, 3.5, 1, 1.25);
-          
           docLabeles.text(moveKross, 5, 5.75, { align: 'center', maxWidth: 9 });
-          
           docLabeles.addImage('img/labelArrow.png', 'PNG', 4.5, 6.2, 1, 1.25);
-          
           docLabeles.text(moveTo, 5, 8.25, { align: 'center', maxWidth: 9 });
-
-        }else if(defaultLabel === true){
-          docLabeles.setFontSize(30);
-          docLabeles.text(`${labelName} по РАПП`, 5, 1, { align: 'center', fontStyle: "bold"  });
-  
-          docLabeles.setLineWidth(0.05);
-          docLabeles.rect(0, 1.7, 10, .005);
-          
-          docLabeles.setFontSize(10);
-          docLabeles.text(`Номер РАПП: ${labelID} /// ${labelDate}`, 5, 1.45, { align: 'center', maxWidth: 9 });
-
+      } else if (defaultLabel === true) {
           docLabeles.setFontSize(36);
           docLabeles.text(moveFrom, 5, 4.5, { align: 'center', maxWidth: 9 });
           docLabeles.addImage('img/labelArrow.png', 'PNG', 4.5, 5, 1.25, 1.5);
           docLabeles.text(moveTo, 5, 7.5, { align: 'center', maxWidth: 9 });
-        }
-    }
-    
-    const pdfBlob = doc.output("blob");
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    // сохраняем и в локальную, и в глобальную (для открывания из Telegram-кнопки)
-    pdfDocumentLinkBLOB       = blobUrl;
-    window.pdfDocumentLinkBLOB = blobUrl;
-    // сразу обновляем UI
-    updateBlobLinks();
-    
-    // для совместимости: сразу обновляем атрибут target и href
-    const printLink = document.querySelector('a.labelGenerator-print');
-    if (printLink) {
+      }
+  }
+
+  // ✅ Генерируем BLOB
+  const pdfBlob = docLabeles.output("blob");
+  const blobUrl = URL.createObjectURL(pdfBlob);
+
+  // ✅ Сохраняем ТОЛЬКО в labelDocumentLinkBLOB, не трогаем pdfDocumentLinkBLOB
+  labelDocumentLinkBLOB = blobUrl;
+  window.labelDocumentLinkBLOB = blobUrl;
+
+  // ✅ Обновляем ссылку для labelGenerator-print
+  const printLink = document.querySelector('a.labelGenerator-print');
+  if (printLink) {
       printLink.target = '_blank';
-      printLink.href   = blobUrl;
-    }
-    
-    for (let i = 0; i < 4; i++) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 300; // 10см
-        canvas.height = 300; // 10см
-        previewBox.appendChild(canvas);
-        
-        const ctx = canvas.getContext('2d');
-        
-        pdfjsLib.getDocument(blobUrl).promise.then(pdf => {
-            return pdf.getPage(i + 1);
-        }).then(page => {
-            const viewport = page.getViewport({ scale: 1.5 });
-            const scale = Math.min(canvas.width / viewport.width, canvas.height / viewport.height);
-            const scaledViewport = page.getViewport({ scale });
-            
-            canvas.width = scaledViewport.width;
-            canvas.height = scaledViewport.height;
-            
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: scaledViewport
-            };
-            return page.render(renderContext).promise;
-        });
-    }
+      printLink.href = blobUrl;
+  }
+
+  updateBlobLinks(); // Она обновит .labelGenerator-print если переменная указана
+
+  // 🖼️ Генерация превью
+  for (let i = 0; i < 4; i++) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 300;
+      canvas.height = 300;
+      previewBox.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+
+      pdfjsLib.getDocument(blobUrl).promise.then(pdf => {
+          return pdf.getPage(i + 1);
+      }).then(page => {
+          const viewport = page.getViewport({ scale: 1.5 });
+          const scale = Math.min(canvas.width / viewport.width, canvas.height / viewport.height);
+          const scaledViewport = page.getViewport({ scale });
+
+          canvas.width = scaledViewport.width;
+          canvas.height = scaledViewport.height;
+
+          const renderContext = {
+              canvasContext: ctx,
+              viewport: scaledViewport
+          };
+          return page.render(renderContext).promise;
+      });
+  }
 }
+
 
 //~ Превью label END
 
@@ -3056,9 +3047,28 @@ ordersContainer.innerHTML = '';
         }      
       }
 
-
-
-  
+      if ([1,2,3].includes(currentRappGeneratorType) && toggleStates.extraCommentColumn) {
+        // разложим на три части
+        const [w1 = '', w2 = '', ...rest] = parts;
+      
+        // список всех твоих «цветных» префиксов
+        const specialPrefixes = ['F0254','0','72','YP','P0','F1254','F2254','F3000000000','FA254'];
+      
+        // проверяем, есть ли совпадение
+        const isSpecial = specialPrefixes.some(pref => w1.startsWith(pref));
+      
+        if (isSpecial) {
+          // 1) первый кусок — это код
+          orderNumber  = w2 || '';
+          cargoCode    = w1;
+          extraComment = rest.join(' ');
+        } else {
+          // 2) обычный порядок
+          orderNumber  = w1;
+          cargoCode    = w2;
+          extraComment = rest.join(' ');
+        }
+      }
     
       const newOrderRow = document.createElement("div");
       newOrderRow.classList.add("order-row");
