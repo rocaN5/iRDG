@@ -49,6 +49,23 @@ function updateBlobLinks() {
 
 //~ Обновление ссылки BOLOB END
 
+//~ callToSupport
+
+const callToSupport = document.querySelector(".callToSupport")
+callToSupport.addEventListener("click",() => {
+  const modalWindow = document.querySelector(".modalWindow")
+  const supportSection = document.querySelector(".supportSection")
+  modalWindow.style.display = "flex"
+  supportSection.style.display = "flex"
+
+  modalWindow.addEventListener("click", ()=>{
+    modalWindow.style.display = "none"
+    supportSection.style.display = "none"
+  })
+})
+
+//~ callToSupport END
+
 //~ LOAD
 window.onload = () => {
   showMenu()
@@ -1291,6 +1308,7 @@ menuToggle.addEventListener('click', () => {
 
 modalWindow.addEventListener('click', ()=>{
   hideMenu()
+  document.querySelector(".supportSection").style.display = "none"
 })
 
 hideMenu()
@@ -1380,6 +1398,7 @@ const direction__options = [
   "СЦ Челябинск",
   "СЦ Чебоксары",
   "СЦ Ижевск",
+  "CЦ Тверь",
   "СЦ Тюмень",
   "СЦ Екатеринбург",
   "СЦ Набережные Челны",
@@ -1387,7 +1406,8 @@ const direction__options = [
   "СЦ Новосибирск",
   "СЦ Барнаул",
   "СЦ Вологда",
-  "СЦ Смоленск"
+  "СЦ Смоленск",
+  "СЦ Ярославль"
 ];
 
 const courier__options = [
@@ -2061,6 +2081,7 @@ const direction_to_label_names = {
   "СЦ Челябинск": "unknown",
   "СЦ Чебоксары": "unknown",
   "СЦ Ижевск": "unknown",
+  "СЦ Тверь": "unknown",
   "СЦ Тюмень": "unknown",
   "СЦ Екатеринбург": "north",
   "СЦ Набережные Челны": "unknown",
@@ -2072,7 +2093,8 @@ const direction_to_label_names = {
   "СЦ Софьино ФФЦ": "north",
   "СЦ Софьино Суперсклад": "north",
   "СЦ Софьино КГТ": "north",
-  "СЦ Тарный": "north"
+  "СЦ Тарный": "north",
+  "СЦ Ярославль": "unknown"
 };
 
 const recipient_replacements = {
@@ -3655,6 +3677,7 @@ function generatePDF() {
     "СЦ Челябинск" : "Челябинская область, городской округ Челябинск, Челябинск, улица Монтажников, д16",
     "СЦ Чебоксары" : "Чувашская республика, городской округ Чебоксары, Чебоксары, Гаражный проезд, д 3/1",
     "СЦ Ижевск" : "Удмуртская Республика, городской округ Ижевск, Ижевск, улица Пойма, д. 105",
+    "СЦ Тверь" : "Тверь, улица Бочкина, д. 17",
     "СЦ Тюмень" : "Тюменская область, городской округ Тюмень, Тюмень, Коммунистическая улица, д 47, стр. 12",
     "СЦ Екатеринбург" : "Свердловская область, муниципальное образование Екатеринбург, Екатеринбург, Серовский тракт, 11-й километр, д. 5, стр. 1",
     "СЦ Набережные Челны" : "Республика Татарстан, городской округ Набережные Челны, Набережные Челны, Машиностроительная улица, д. 39",
@@ -3662,7 +3685,8 @@ function generatePDF() {
     "СЦ Новосибирск" : "Новосибирская область, Тодмачёвский сельсовет, Производственно-складская зона, Производственно-складская зона, д. 7",
     "СЦ Барнаул" : "Алтайский край, муниципальное образование Барнаул, Барнаул, улица Чернышевского, д 293Б",
     "СЦ Вологда" : "Вологодская область, городской округ Вологда, Вологда, Ананьинский переулок, д. 14",
-    "СЦ Смоленск" : "Смоленская область, муниципальное образование Смоленск, Смоленск, Краснинское шоссе, д. 27"
+    "СЦ Смоленск" : "Смоленская область, муниципальное образование Смоленск, Смоленск, Краснинское шоссе, д. 27",
+    "СЦ Ярославль": "Ярославль, Осташинская улица, д. 8"
   };
 
   // Сбор данных о заказах
@@ -4345,6 +4369,16 @@ function decodeAndDecompress(encoded) {
 document.querySelectorAll('.printDocument').forEach(button => {
   button.addEventListener('click', async event => {
     event.preventDefault();
+    const currentButton = event.currentTarget;
+    
+    if (document.getElementById('allOrders')?.value.trim()) {
+      currentButton.setAttribute('isLoading', 'true');
+      currentButton.innerHTML = `
+        <i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>
+      `
+      currentButton.setAttribute('inert', 'true');
+    }
+
 
     const orderRows = Array.from(document.querySelectorAll('.order-row'));
     if (orderRows.length === 0) {
@@ -4495,12 +4529,25 @@ document.querySelectorAll('.printDocument').forEach(button => {
         );
 
         // 6. открыть PDF
-        if (window.pdfDocumentLinkBLOB) window.open(window.pdfDocumentLinkBLOB, '_blank');
+        if (window.pdfDocumentLinkBLOB) {
+          const newWindow = window.open(window.pdfDocumentLinkBLOB, '_blank');
+          // Проверяем, не был ли заблокирован popup
+          if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+            console.log('Возможно, браузер заблокировал открытие окна');
+          }
+        }
 
         console.log('Все сообщения успешно отправлены');
       } catch (err) {
         console.error('Ошибка Telegram API при отправке:', err);
         makeNotification("notification:sendMassageAPI", "type:support");
+      } finally {
+        // В любом случае (успех или ошибка) возвращаем isLoading в false
+        currentButton.setAttribute('isLoading', 'false');
+        currentButton.innerHTML = `
+          <i class="fa-solid fa-print fa-beat-fade"></i>
+        `
+        currentButton.setAttribute('inert', 'false');
       }
     });
   });

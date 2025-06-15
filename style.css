@@ -3675,3 +3675,72 @@ span.hints-description-span-10{
 .labelGenerator-print{
   background: linear-gradient(45deg, #00dcff, #00ffbd);
 }
+
+.printDocument[isLoading="true"]{
+  background-image: repeating-linear-gradient(-45deg, #00dcff, #00dcff 6px, #00bad7 0, #00bad7 12px);
+  background-size: 119px;
+  background-position: 0%;
+  animation: loadingScanLog__activeButton 5s infinite linear;
+  box-shadow: 0px 0px 10px 0px #000, 0px 0px 10px 0px #fff inset;
+}
+
+@keyframes loadingScanLog__activeButton{
+  from{
+      background-position: 0%;
+  }
+  to{
+      background-position: -100%;
+  }
+}
+
+.supportSection{
+  background: #00000099;
+  position: fixed;
+  z-index: 999999;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: flex-start;
+  top: 0;
+  backdrop-filter: blur(4px) grayscale(1);
+  box-shadow: 0px 0px 100px 10px #000 inset, 0px 0px 100px 10px #000 inset, 0px 0px 100px 10px #000 inset;
+  display: none;
+  pointer-events: none;
+}
+
+.supportWrapper{
+  display: flex;
+  flex-flow: column;
+  gap: 10px;
+  position: relative;
+  top: 20%;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px #000, 0px 0px 10px #000;
+  transition: 300ms linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.19 13.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%);
+  z-index: 99999999999;
+  pointer-events: all;
+}
+
+.supportBlock{
+  min-width: 400px;
+  display: flex;
+  flex-flow: column;
+  gap: 30px;
+  align-items: center;
+}
+
+p.clownFace{
+  font-size: 12rem;
+  transition: 5s;
+  scale: 1.2;
+}
+
+p.clownText{
+  font-size: 2rem;
+  color: #fff;
+  max-width: 379px;
+  text-align: center;
+}
