@@ -53,6 +53,8 @@ function updateBlobLinks() {
 
 const callToSupport = document.querySelector(".callToSupport")
 callToSupport.addEventListener("click",() => {
+  calendarModalWindow.classList.remove("active")
+  calendar.classList.add("calendarOnLoad")
   const modalWindow = document.querySelector(".modalWindow")
   const supportSection = document.querySelector(".supportSection")
   modalWindow.style.display = "flex"

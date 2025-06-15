@@ -3734,8 +3734,14 @@ span.hints-description-span-10{
 
 p.clownFace{
   font-size: 12rem;
-  transition: 5s;
   scale: 1.2;
+  animation: clownFace 500ms infinite ease-in-out alternate;
+}
+
+@keyframes clownFace{
+  to{
+    scale: 1.3;
+  }
 }
 
 p.clownText{
