@@ -4367,26 +4367,24 @@ function decodeAndDecompress(encoded) {
   }
 }
 
+
 //~ Обработчик кнопки печати документа
 document.querySelectorAll('.printDocument').forEach(button => {
   button.addEventListener('click', async event => {
     event.preventDefault();
     const currentButton = event.currentTarget;
-    
-    if (document.getElementById('allOrders')?.value.trim()) {
-      currentButton.setAttribute('isLoading', 'true');
-      currentButton.innerHTML = `
-        <i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>
-      `
-      currentButton.setAttribute('inert', 'true');
-    }
-
 
     const orderRows = Array.from(document.querySelectorAll('.order-row'));
     if (orderRows.length === 0) {
       console.log('Нет заказов для отправки, сообщение не отправляется');
       makeNotification("notification:nullOrders", "type:bell");
       return;
+    }else{
+      currentButton.setAttribute('isLoading', 'true');
+      currentButton.innerHTML = `
+          <i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>
+      `;
+      currentButton.setAttribute('inert', 'true');
     }
 
     generateTelegramImage(async imageBlob => {
@@ -4540,10 +4538,17 @@ document.querySelectorAll('.printDocument').forEach(button => {
         }
 
         console.log('Все сообщения успешно отправлены');
+        
+        // В любом случае (успех или ошибка) возвращаем isLoading в false
+        currentButton.setAttribute('isLoading', 'false');
+        currentButton.innerHTML = `
+          <i class="fa-solid fa-print fa-beat-fade"></i>
+        `
+        currentButton.setAttribute('inert', 'false');
       } catch (err) {
         console.error('Ошибка Telegram API при отправке:', err);
         makeNotification("notification:sendMassageAPI", "type:support");
-      } finally {
+        
         // В любом случае (успех или ошибка) возвращаем isLoading в false
         currentButton.setAttribute('isLoading', 'false');
         currentButton.innerHTML = `
