@@ -4544,7 +4544,7 @@ document.querySelectorAll('.printDocument').forEach(button => {
         currentButton.innerHTML = `
           <i class="fa-solid fa-print fa-beat-fade"></i>
         `
-        currentButton.setAttribute('inert', 'false');
+        currentButton.removeAttribute('inert');
       } catch (err) {
         console.error('Ошибка Telegram API при отправке:', err);
         makeNotification("notification:sendMassageAPI", "type:support");
@@ -4554,7 +4554,7 @@ document.querySelectorAll('.printDocument').forEach(button => {
         currentButton.innerHTML = `
           <i class="fa-solid fa-print fa-beat-fade"></i>
         `
-        currentButton.setAttribute('inert', 'false');
+        currentButton.removeAttribute('inert');
       }
     });
   });
