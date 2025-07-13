@@ -1089,18 +1089,33 @@ function textAreaOverLay__updateCanvas() {
             }
   
             words.forEach((word, index) => {
-                if (index === 0) textAreaOverLay__ctx.fillStyle = firstWordColor;
-                else if (index === 1) textAreaOverLay__ctx.fillStyle = secondWordColor;
-                else textAreaOverLay__ctx.fillStyle = otherWordsColor;
-  
-                textAreaOverLay__ctx.shadowColor = textAreaOverLay__ctx.fillStyle;
-                textAreaOverLay__ctx.shadowBlur = 10;
-                if (shouldStrikeRed && index >= 2 && toggleStates.smartFormating === true) {
+              // ВСТАВКА НАЧАЛО (заменяем старую логику для типа 4)
+              if (currentRappGeneratorType === 4) {
+                  if (word.startsWith('FA254')) {
+                      textAreaOverLay__ctx.fillStyle = '#ff005c';
+                  }
+                  else if (word.startsWith('ANOMALIISC')) {
+                      textAreaOverLay__ctx.fillStyle = '#ff00ae';
+                  }
+                  else {
+                      textAreaOverLay__ctx.fillStyle = '#fff';
+                  }
+              }
+              // ВСТАВКА КОНЕЦ
+              else {  // ← Это уже существующий else (старая логика для типов 1-3)
+                  if (index === 0) textAreaOverLay__ctx.fillStyle = firstWordColor;
+                  else if (index === 1) textAreaOverLay__ctx.fillStyle = secondWordColor;
+                  else textAreaOverLay__ctx.fillStyle = otherWordsColor;
+              }
+          
+              textAreaOverLay__ctx.shadowColor = textAreaOverLay__ctx.fillStyle;
+              textAreaOverLay__ctx.shadowBlur = 10;
+              if (shouldStrikeRed && index >= 2 && toggleStates.smartFormating === true) {
                   textAreaOverLay__ctx.fillStyle = "#757575";
                   textAreaOverLay__ctx.shadowColor = "#757575";
-                }
-                textAreaOverLay__ctx.fillText(word, x, y);
-                if (shouldStrikeRed && index >= 2 && toggleStates.smartFormating === true) {
+              }
+              textAreaOverLay__ctx.fillText(word, x, y);
+              if (shouldStrikeRed && index >= 2 && toggleStates.smartFormating === true) {
                   const wordWidth = textAreaOverLay__ctx.measureText(word).width;
                   const midY = y + fontSize / 2;
                   textAreaOverLay__ctx.strokeStyle = "#757575";
@@ -1109,9 +1124,9 @@ function textAreaOverLay__updateCanvas() {
                   textAreaOverLay__ctx.moveTo(x, midY);
                   textAreaOverLay__ctx.lineTo(x + wordWidth, midY);
                   textAreaOverLay__ctx.stroke();
-                }
-                x += textAreaOverLay__ctx.measureText(word + ' ').width;
-            });
+              }
+              x += textAreaOverLay__ctx.measureText(word + ' ').width;
+          });
         }
         y += lineHeight;
     }
@@ -2964,36 +2979,41 @@ ordersContainer.innerHTML = '';
         oneRow = false;
       }
     }
-      if (currentRappGeneratorType === 4) {
-        //~ АНОМАЛИИ • АНОМАЛИИ • АНОМАЛИИ
-        if (parts.length > 1 && parts[1].startsWith('FA254')) {
-            orderNumber = parts[0] || '';
-            cargoCode = parts.length > 1 ? parts[1] : '';
-    
-            if (cargoCode.includes(' ')) {
-                let cargoParts = cargoCode.split(' ');
-                cargoCode = cargoParts[0]; // Берем только первую часть
-                anomalyDescription = cargoParts.slice(1).join(' '); // Остальное уходит в anomalyDescription
-            } else {
-                anomalyDescription = parts.length > 2 ? parts.slice(2).join(' ') : '';
-            }
-        } else {
-          orderNumber = parts[0] || '';
-          cargoCode = (parts.slice(1).join(' ').split(' ')[0]) || '';
-          if (cargoCode.includes(' ')) {
-            let cargoParts = cargoCode.split(' ');
-            cargoCode = cargoParts[0];
-            anomalyDescription = cargoParts.slice(1).join(' ');
+    if (currentRappGeneratorType === 4) {
+      orderNumber = '';
+      cargoCode = '';
+      anomalyDescription = '';
+      
+      // Ищем FA254 и ANOMALIISC в любом месте строки
+      for (const part of parts) {
+          if (part.startsWith('FA254')) {
+              orderNumber = part;
+          } else if (part.startsWith('ANOMALIISC')) {
+              cargoCode = part;
+          } else {
+              // Всё что не FA254 и не ANOMALIISC - в описание
+              if (anomalyDescription) {
+                  anomalyDescription += ' ' + part;
+              } else {
+                  anomalyDescription = part;
+              }
           }
-          cargoCode = parts[1] || '';
-          anomalyDescription = parts.length > 2
-            ? parts.slice(2).join(' ')
-            : '';
-        }
-    
-        // Удаляем все виды кавычек из anomalyDescription
-        anomalyDescription = anomalyDescription.replace(/["'`]/g, '');
-      }else if (currentRappGeneratorType === 5) {
+      }
+      
+      // Если не нашли FA254, но есть другие части - первая часть становится номером
+      if (!orderNumber && parts.length > 0) {
+          orderNumber = parts[0];
+      }
+      
+      // Если не нашли ANOMALIISC, но есть другие части - вторая часть становится кодом
+      if (!cargoCode && parts.length > 1) {
+          cargoCode = parts[1];
+      }
+      
+      // Удаляем кавычки из описания
+      anomalyDescription = anomalyDescription.replace(/["'`]/g, '');
+      oneRow = false;
+  }else if (currentRappGeneratorType === 5) {
         const firstPart = parts[0];
     
         if (firstPart.startsWith('YP') || firstPart.startsWith('P0') || firstPart.startsWith('F0254'))  {
