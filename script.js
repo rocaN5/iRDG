@@ -135,8 +135,10 @@ function makeNotification(callReason, typeReason) {
     "notification:titleImageBLOB:type:support": "Ошибка при получении ссылки на сопровождающее изображение, свяжитесь с разработчиком",
     "notification:titleImageIcon:type:support": "Не удалось загрузить иконку для сопровождающего изображения, свяжитесь с разработчиком",
     "notification:titleImageBackground:type:support": "Не удалось загрузить фон для сопровождающего изображения, свяжитесь с разработчиком",
-    "notification:nullOrders:type:bell": "Поле ввода пустое, пожалуйста введи номера заказов для генерации РАПП",
-    "notification:sendMassageAPI:type:support": "Ошибка при отправке запрос к TelegramAPI свяжитесь с разработчиком"
+    "notification:sendMassageAPI:type:support": "Ошибка при отправке запрос к TelegramAPI свяжитесь с разработчиком",
+
+    "notification:nullOrders:type:attention": "Поле ввода пустое, пожалуйста введи номера заказов для генерации РАПП",
+    "notification:missedRecipient:type:attention": "Печать отклонена, не выбран получатель !"
   };
 
   let notificationIcon = "";
@@ -167,6 +169,9 @@ function makeNotification(callReason, typeReason) {
   } else if (typeReason === "type:select") {
     notificationIcon = `<i class="fa-solid fa-arrows-spin"></i>`;
     createNotification.setAttribute("notification-type","select")
+  } else if (typeReason === "type:attention") {
+    notificationIcon = `<i class="fa-solid fa-shield-exclamation"></i>`;
+    createNotification.setAttribute("notification-type","attention")
   } else {
     return "mega-error";
   }
@@ -427,7 +432,11 @@ document.getElementById('textareaInsertKey-btn').addEventListener('click', async
 // Обработчик изменения радиокнопки (из вашего кода)
 currentGeneratorType_selection.forEach(input => {
   input.addEventListener("change", (event) => {
-      direction__input.value = "Не выбран";
+      if(currentRappGeneratorType === 2){
+        direction__input.value = "СРК";
+      }else{
+        direction__input.value = "Не выбран";
+      }
       let title = "";
       getDataAndMakeOrderRow(event);
       const header = document.querySelector("header")
@@ -1135,7 +1144,11 @@ textAreaOverLay__textarea.addEventListener("paste", (event) => {
 currentGeneratorType_selection.forEach(input => {
   input.addEventListener("change", (event) => {
     try{
-      direction__input.value = "Не выбран"
+      if(currentRappGeneratorType === 2){
+        direction__input.value = "СРК";
+      }else{
+        direction__input.value = "Не выбран";
+      }
       let title = "";
       getDataAndMakeOrderRow(event);
       if (input.id === "rapp-1") {
@@ -4368,18 +4381,70 @@ function decodeAndDecompress(encoded) {
 }
 
 
+let notAllowedToPrint = false;
+function printButtonNot__allowed(reason){
+  const printDocument = document.querySelector(".printDocument")
+  if(reason == "null-recipient"){
+    if(notAllowedToPrint === false){
+      notAllowedToPrint = true
+      makeNotification("notification:missedRecipient", "type:attention")
+      const recipient = document.getElementById('recipient')
+      printDocument.setAttribute("disabled", true)
+      printDocument.setAttribute("inert", true)
+      printDocument.innerHTML = `
+        <i class="fa-solid fa-ban"></i>
+      `
+      recipient.classList.add("recipient__notAllowed")
+      setTimeout(() => {
+        printDocument.removeAttribute("disabled")
+        printDocument.removeAttribute("inert")
+        printDocument.innerHTML = `
+          <i class="fa-solid fa-print fa-beat-fade"></i>
+        `
+        recipient.classList.remove("recipient__notAllowed")
+        notAllowedToPrint = false
+      }, 2000);
+    }
+  }else if(reason == "null-textarea"){
+    if(notAllowedToPrint === false){
+      notAllowedToPrint = true
+      makeNotification("notification:nullOrders", "type:attention");
+      const textArea = document.querySelector('.allOrders')
+      printDocument.setAttribute("disabled", true)
+      printDocument.setAttribute("inert", true)
+      printDocument.innerHTML = `
+        <i class="fa-solid fa-ban"></i>
+      `
+      textArea.setAttribute("textArea__notAllowed", true)
+      setTimeout(() => {
+        printDocument.removeAttribute("disabled")
+        printDocument.removeAttribute("inert")
+        printDocument.innerHTML = `
+          <i class="fa-solid fa-print fa-beat-fade"></i>
+        `
+        textArea.removeAttribute("textArea__notAllowed")
+        notAllowedToPrint = false
+      }, 2000);
+    }
+  }
+}
+
 //~ Обработчик кнопки печати документа
 document.querySelectorAll('.printDocument').forEach(button => {
   button.addEventListener('click', async event => {
     event.preventDefault();
+
     const currentButton = event.currentTarget;
 
     const orderRows = Array.from(document.querySelectorAll('.order-row'));
     if (orderRows.length === 0) {
       console.log('Нет заказов для отправки, сообщение не отправляется');
-      makeNotification("notification:nullOrders", "type:bell");
+      printButtonNot__allowed("null-textarea")
       return;
-    }else{
+    }else if(document.getElementById("recipient").value === "Не выбран"){
+      printButtonNot__allowed("null-recipient")
+      return
+    } else{
       currentButton.setAttribute('isLoading', 'true');
       currentButton.innerHTML = `
           <i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>

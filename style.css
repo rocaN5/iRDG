@@ -542,6 +542,35 @@ textarea.allOrders[isColored="false"]{
   color: #fff;
 }
 
+textarea[textArea__notAllowed="true"]{
+  outline: 2px solid red !important;
+  box-shadow: 0px 0px 10px 0px red, 0px 0px 10px 2px red inset;
+  transition: 200ms !important;
+  animation: textArea__notAllowed 1s ease-in-out infinite !important;
+  background: #3f1414 !important;
+
+  &::-webkit-input-placeholder{
+    color: red !important;
+    transition: 200ms;
+    text-shadow: 0px 0px 2px red, 0px 0px 10px red;
+  }
+}
+
+@keyframes textArea__notAllowed {
+  0%, 100% {
+    box-shadow: 0px 0px 10px 0px red, 0px 0px 10px 2px red inset;
+    transform: translateX(0px);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    box-shadow: 0px 0px 16px 2px red, 0px 0px 14px 4px red inset;
+    transform: translateX(-2px);
+  }
+  20%, 40%, 60%, 80% {
+    box-shadow: 0px 0px 13px 0px red, 0px 0px 13px 2px red inset;
+    transform: translateX(2px);
+  }
+}
+
 .orderRowNumber{
   position: absolute;
   left: 0;
@@ -2835,6 +2864,26 @@ button.printDocument:disabled{
   --tooltipArrowPosition-type-y: 1;
   --tooltipArrowRotation: 0deg;
   --tooltipText: "Выбор СЦ, принимающего грузоместо(а)";
+
+
+}
+
+.documentDataItem:has(.recipient__notAllowed){
+  animation: recipient__notAllowed 1s ease-in-out 1;
+}
+
+@keyframes recipient__notAllowed {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+    box-shadow: 0px 0px 10px 2px #f00;
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+    box-shadow: 0px 0px 10px 4px #f00;
+  }
 }
 
 #disableTooltip{
@@ -3321,7 +3370,10 @@ span.hints-description-span-10{
   --notification-main-color: #cf0;
 }
 .notification-item[notification-type="bell"]{
-  --notification-main-color: #00dcff;
+  --notification-main-color: #ffe600;
+}
+.notification-item[notification-type="attention"]{
+  --notification-main-color: #ff5e00;
 }
 .notification-item[notification-type="error"]{
   --notification-main-color: #ff0000;
