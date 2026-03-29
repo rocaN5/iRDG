@@ -4617,28 +4617,73 @@ document.querySelectorAll('.printDocument').forEach(button => {
 <b>✏️ <u>Заказы указанные в РАПП:</u></b>
 `.trim();
 
-        try {
-              // Отправляем фото
-              const photoJson = await sendPhotoViaMirror(botToken, chatId, messageThreadId, imageBlob, null);
-              const replyTo = photoJson.result.message_id;
-
-              // Отправляем текст
-              await sendTextMessage(botToken, chatId, messageThreadId, `${headerText}\n${chunks[0].join('\n')}`, replyTo);
-
-              for (let i = 1; i < chunks.length; i++) {
-                  await sendTextMessage(botToken, chatId, messageThreadId, chunks[i].join('\n'), replyTo);
-              }
-
-              await sendTextMessage(botToken, chatId, messageThreadId, 
-                  `<b>🔑 <u>Ключ генерации:</u></b>\n<blockquote expandable><code>${currentHash}</code></blockquote>`, 
-                  replyTo
-              );
-
-              console.log('Успешно отправлено через зеркало Telegram');
+            try {
+                // Формируем полный текст сообщения (разбиваем на части из-за лимита Telegram 4096 символов)
+                const MAX_MESSAGE_LENGTH = 4000;
+                
+                // Собираем все строки заказов в один массив
+                let allOrderLines = [];
+                for (const line of ordersLines) {
+                    allOrderLines.push(line);
+                }
+                
+                // Формируем полный текст с заголовком
+                let fullMessageText = headerText + '\n\n' + allOrderLines.join('\n');
+                
+                // Разбиваем на части, если текст слишком длинный
+                let messageChunks = [];
+                if (fullMessageText.length > MAX_MESSAGE_LENGTH) {
+                    // Разбиваем по частям
+                    let currentChunk = headerText + '\n\n';
+                    for (const line of allOrderLines) {
+                        if ((currentChunk + line + '\n').length > MAX_MESSAGE_LENGTH) {
+                            messageChunks.push(currentChunk);
+                            currentChunk = line + '\n';
+                        } else {
+                            currentChunk += line + '\n';
+                        }
+                    }
+                    if (currentChunk) messageChunks.push(currentChunk);
+                } else {
+                    messageChunks = [fullMessageText];
+                }
+                
+                // Пробуем отправить фото с текстом
+                const sendResult = await sendPhotoWithTextFallback(
+                    botToken, 
+                    chatId, 
+                    messageThreadId, 
+                    imageBlob, 
+                    messageChunks[0],  // Первая часть текста
+                    null
+                );
+                
+                if (sendResult.success) {
+                    const replyTo = sendResult.messageId;
+                    
+                    // Отправляем остальные части текста (если есть)
+                    for (let i = 1; i < messageChunks.length; i++) {
+                        await sendTextMessage(botToken, chatId, messageThreadId, messageChunks[i], replyTo);
+                    }
+                    
+                    // Отправляем ключ генерации
+                    await sendTextMessage(botToken, chatId, messageThreadId, 
+                        `<b>🔑 <u>Ключ генерации:</u></b>\n<blockquote expandable><code>${currentHash}</code></blockquote>`, 
+                        replyTo
+                    );
+                    
+                    if (sendResult.photoFailed) {
+                        console.log('Текст отправлен, фото не удалось');
+                    } else {
+                        console.log('Фото и текст успешно отправлены');
+                    }
+                } else {
+                    throw new Error('Не удалось отправить ни фото, ни текст');
+                }
+                
             } catch (err) {
                 console.error('Ошибка отправки в Telegram:', err);
                 makeNotification("notification:sendMassageAPI", "type:attention");
-                // Не блокируем открытие PDF из-за ошибки Telegram
             }
             
             // PDF открываем в любом случае!
@@ -4693,17 +4738,72 @@ async function sendViaTelegramMirror(botToken, method, body) {
 }
 
 // Функция отправки фото через зеркало
-async function sendPhotoViaMirror(botToken, chatId, threadId, photoBlob, replyTo) {
+async function sendPhotoWithTextFallback(botToken, chatId, threadId, photoBlob, textMessage, replyTo) {
+    // Сначала пробуем отправить фото
+    try {
+        const mirrorUrl = 'https://telegram-bot-api.vercel.app';
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('message_thread_id', threadId);
+        formData.append('photo', photoBlob, 'iRDG-message.png');
+        if (replyTo) formData.append('reply_to_message_id', replyTo);
+        
+        const response = await fetch(`${mirrorUrl}/bot${botToken}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (!data.ok) {
+            throw new Error(`Telegram API error: ${JSON.stringify(data)}`);
+        }
+        
+        console.log('Фото успешно отправлено');
+        
+        // После успешной отправки фото, отправляем текст как ответ на фото
+        if (textMessage) {
+            await sendTextMessage(botToken, chatId, threadId, textMessage, data.result.message_id);
+        }
+        
+        return { success: true, messageId: data.result.message_id };
+        
+    } catch (photoError) {
+        console.warn('Не удалось отправить фото, пробуем отправить только текст:', photoError);
+        
+        // Если фото не отправилось, отправляем только текст
+        if (textMessage) {
+            try {
+                const textResult = await sendTextMessage(botToken, chatId, threadId, textMessage, null);
+                console.log('Текст успешно отправлен (фото не отправилось)');
+                return { success: true, messageId: textResult.result.message_id, photoFailed: true };
+            } catch (textError) {
+                console.error('Не удалось отправить даже текст:', textError);
+                return { success: false, error: textError };
+            }
+        }
+        
+        return { success: false, error: photoError };
+    }
+}
+
+async function sendTextViaMirror(botToken, chatId, threadId, text, replyToMessageId) {
     const mirrorUrl = 'https://telegram-bot-api.vercel.app';
-    const formData = new FormData();
-    formData.append('chat_id', chatId);
-    formData.append('message_thread_id', threadId);
-    formData.append('photo', photoBlob, 'iRDG-message.png');
-    if (replyTo) formData.append('reply_to_message_id', replyTo);
+    const body = {
+        chat_id: chatId,
+        message_thread_id: threadId,
+        text: text,
+        parse_mode: 'HTML'
+    };
+    if (replyToMessageId) body.reply_to_message_id = replyToMessageId;
     
-    const response = await fetch(`${mirrorUrl}/bot${botToken}/sendPhoto`, {
+    const response = await fetch(`${mirrorUrl}/bot${botToken}/sendMessage`, {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
     });
     
     if (!response.ok) {
@@ -4716,16 +4816,6 @@ async function sendPhotoViaMirror(botToken, chatId, threadId, photoBlob, replyTo
     }
     
     return data;
-}
-
-async function sendTextViaMirror(botToken, chatId, threadId, text, replyToMessageId) {
-    return sendViaTelegramMirror(botToken, 'sendMessage', {
-        chat_id: chatId,
-        message_thread_id: threadId,
-        text: text,
-        parse_mode: 'HTML',
-        reply_to_message_id: replyToMessageId
-    });
 }
 
 async function isMirrorAvailable() {
@@ -4759,9 +4849,9 @@ async function sendTextMessage(botToken, chatId, threadId, text, replyToMessageI
             chat_id: chatId,
             message_thread_id: threadId,
             text: text,
-            parse_mode: 'HTML',
-            reply_to_message_id: replyToMessageId
+            parse_mode: 'HTML'
         };
+        if (replyToMessageId) body.reply_to_message_id = replyToMessageId;
         
         const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',
