@@ -4486,33 +4486,40 @@ function printButtonNot__allowed(reason){
 
 //~ Обработчик кнопки печати документа
 document.querySelectorAll('.printDocument').forEach(button => {
-  button.addEventListener('click', async event => {
-    event.preventDefault();
-
-    const currentButton = event.currentTarget;
-
-    const orderRows = Array.from(document.querySelectorAll('.order-row'));
-    if (orderRows.length === 0) {
-      console.log('Нет заказов для отправки, сообщение не отправляется');
-      printButtonNot__allowed("null-textarea")
-      return;
-    }else if(document.getElementById("recipient").value === "Не выбран"){
-      printButtonNot__allowed("null-recipient")
-      return
-    } else{
-      currentButton.setAttribute('isLoading', 'true');
-      currentButton.innerHTML = `
-          <i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>
-      `;
-      currentButton.setAttribute('inert', 'true');
-    }
-
-    generateTelegramImage(async imageBlob => {
-      if (!imageBlob) {
-        console.error("Ошибка при генерации картинки — прерываем отправку");
-        makeNotification("notification:titleImage", "type:support");
-        return;
-      }
+    button.addEventListener('click', async event => {
+        event.preventDefault();
+        const currentButton = event.currentTarget;
+        
+        // Проверки...
+        const orderRows = Array.from(document.querySelectorAll('.order-row'));
+        if (orderRows.length === 0) {
+            printButtonNot__allowed("null-textarea");
+            return;
+        }
+        
+        if (document.getElementById("recipient").value === "Не выбран") {
+            printButtonNot__allowed("null-recipient");
+            return;
+        }
+        
+        // Анимация загрузки
+        currentButton.setAttribute('isLoading', 'true');
+        currentButton.innerHTML = `<i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>`;
+        currentButton.setAttribute('inert', 'true');
+        
+        generateTelegramImage(async imageBlob => {
+            if (!imageBlob) {
+                console.error("Ошибка при генерации картинки");
+                makeNotification("notification:titleImage", "type:support");
+                // Открываем PDF даже при ошибке генерации картинки
+                if (window.pdfDocumentLinkBLOB) {
+                    window.open(window.pdfDocumentLinkBLOB, '_blank');
+                }
+                currentButton.setAttribute('isLoading', 'false');
+                currentButton.innerHTML = `<i class="fa-solid fa-print fa-beat-fade"></i>`;
+                currentButton.removeAttribute('inert');
+                return;
+            }
 
       // выбор настроек по типу
       let compressedToken, chatId, messageThreadId;
@@ -4610,93 +4617,162 @@ document.querySelectorAll('.printDocument').forEach(button => {
 <b>✏️ <u>Заказы указанные в РАПП:</u></b>
 `.trim();
 
-      try {
-        // 1. фото
-        const fdPhoto = new FormData();
-        fdPhoto.append('chat_id', chatId);
-        fdPhoto.append('message_thread_id', messageThreadId);
-        fdPhoto.append('photo', imageBlob, 'iRDG-message.png');
+        try {
+              // Отправляем фото
+              const photoJson = await sendPhotoViaMirror(botToken, chatId, messageThreadId, imageBlob, null);
+              const replyTo = photoJson.result.message_id;
 
-        const photoResp = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: fdPhoto });
-        const photoJson = await photoResp.json();
-        if (!photoJson.ok) throw photoJson;
-        const replyTo = photoJson.result.message_id;
+              // Отправляем текст
+              await sendTextMessage(botToken, chatId, messageThreadId, `${headerText}\n${chunks[0].join('\n')}`, replyTo);
 
-        // 2. разбить заказы на чанки по 40/50
-        const chunks = [];
-        if (ordersLines.length > 40) {
-          chunks.push(ordersLines.slice(0, 40));
-          for (let i = 40; i < ordersLines.length; i += 50) {
-            chunks.push(ordersLines.slice(i, i + 50));
-          }
-        } else {
-          chunks.push(ordersLines);
-        }
+              for (let i = 1; i < chunks.length; i++) {
+                  await sendTextMessage(botToken, chatId, messageThreadId, chunks[i].join('\n'), replyTo);
+              }
 
-        // 3. отправка заголовка + первый чанк
-        await sendTextMessage(botToken, chatId, messageThreadId, `${headerText}\n${chunks[0].join('\n')}`, replyTo);
+              await sendTextMessage(botToken, chatId, messageThreadId, 
+                  `<b>🔑 <u>Ключ генерации:</u></b>\n<blockquote expandable><code>${currentHash}</code></blockquote>`, 
+                  replyTo
+              );
 
-        // 4. остальные чанки
-        for (let i = 1; i < chunks.length; i++) {
-          await sendTextMessage(botToken, chatId, messageThreadId, chunks[i].join('\n'), replyTo);
-        }
-
-        // 5. хеш-код
-        await sendTextMessage(
-          botToken, chatId, messageThreadId,
-          `<b>🔑 <u>Ключ генерации:</u></b>\n<blockquote expandable><code>${currentHash}</code></blockquote>`,
-          replyTo
-        );
-
-        // 6. открыть PDF
-        if (window.pdfDocumentLinkBLOB) {
-          const newWindow = window.open(window.pdfDocumentLinkBLOB, '_blank');
-          // Проверяем, не был ли заблокирован popup
-          if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-            console.log('Возможно, браузер заблокировал открытие окна');
-          }
-        }
-
-        console.log('Все сообщения успешно отправлены');
-        
-        // В любом случае (успех или ошибка) возвращаем isLoading в false
-        currentButton.setAttribute('isLoading', 'false');
-        currentButton.innerHTML = `
-          <i class="fa-solid fa-print fa-beat-fade"></i>
-        `
-        currentButton.removeAttribute('inert');
-      } catch (err) {
-        console.error('Ошибка Telegram API при отправке:', err);
-        makeNotification("notification:sendMassageAPI", "type:support");
-        
-        // В любом случае (успех или ошибка) возвращаем isLoading в false
-        currentButton.setAttribute('isLoading', 'false');
-        currentButton.innerHTML = `
-          <i class="fa-solid fa-print fa-beat-fade"></i>
-        `
-        currentButton.removeAttribute('inert');
-      }
+              console.log('Успешно отправлено через зеркало Telegram');
+            } catch (err) {
+                console.error('Ошибка отправки в Telegram:', err);
+                makeNotification("notification:sendMassageAPI", "type:attention");
+                // Не блокируем открытие PDF из-за ошибки Telegram
+            }
+            
+            // PDF открываем в любом случае!
+            if (window.pdfDocumentLinkBLOB) {
+                setTimeout(() => {
+                    window.open(window.pdfDocumentLinkBLOB, '_blank');
+                }, 500);
+            }
+            
+            // Восстанавливаем кнопку
+            currentButton.setAttribute('isLoading', 'false');
+            currentButton.innerHTML = `<i class="fa-solid fa-print fa-beat-fade"></i>`;
+            currentButton.removeAttribute('inert');
+        });
     });
-  });
 });
+
+// Функция отправки через зеркало Telegram API
+async function sendViaTelegramMirror(botToken, method, body) {
+    const mirrorUrl = 'https://telegram-bot-api.vercel.app';
+    const url = `${mirrorUrl}/bot${botToken}/${method}`;
+    
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (!data.ok) {
+            throw new Error(`Telegram API error: ${JSON.stringify(data)}`);
+        }
+        
+        return data;
+    } catch (error) {
+        console.error(`Ошибка при отправке через зеркало (${method}):`, error);
+        throw error;
+    }
+}
+
+// Функция отправки фото через зеркало
+async function sendPhotoViaMirror(botToken, chatId, threadId, photoBlob, replyTo) {
+    const mirrorUrl = 'https://telegram-bot-api.vercel.app';
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    formData.append('message_thread_id', threadId);
+    formData.append('photo', photoBlob, 'iRDG-message.png');
+    if (replyTo) formData.append('reply_to_message_id', replyTo);
+    
+    const response = await fetch(`${mirrorUrl}/bot${botToken}/sendPhoto`, {
+        method: 'POST',
+        body: formData
+    });
+    
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    if (!data.ok) {
+        throw new Error(`Telegram API error: ${JSON.stringify(data)}`);
+    }
+    
+    return data;
+}
+
+async function sendTextViaMirror(botToken, chatId, threadId, text, replyToMessageId) {
+    return sendViaTelegramMirror(botToken, 'sendMessage', {
+        chat_id: chatId,
+        message_thread_id: threadId,
+        text: text,
+        parse_mode: 'HTML',
+        reply_to_message_id: replyToMessageId
+    });
+}
+
+async function isMirrorAvailable() {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        const response = await fetch('https://telegram-bot-api.vercel.app', {
+            method: 'HEAD',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        return response.ok;
+    } catch (error) {
+        console.warn('Зеркало недоступно:', error);
+        return false;
+    }
+}
 
 // вспомогательная функция отправки текста
 async function sendTextMessage(botToken, chatId, threadId, text, replyToMessageId) {
-  const body = {
-    chat_id: chatId,
-    message_thread_id: threadId,
-    text: text,
-    parse_mode: 'HTML',
-    reply_to_message_id: replyToMessageId
-  };
-  const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const js = await res.json();
-  if (!js.ok) throw js;
-  return js;
+    // Пробуем через зеркало
+    try {
+        return await sendTextViaMirror(botToken, chatId, threadId, text, replyToMessageId);
+    } catch (mirrorError) {
+        console.warn('Ошибка при отправке через зеркало, пробуем прямой запрос:', mirrorError);
+        
+        // Fallback на прямой запрос
+        const body = {
+            chat_id: chatId,
+            message_thread_id: threadId,
+            text: text,
+            parse_mode: 'HTML',
+            reply_to_message_id: replyToMessageId
+        };
+        
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        
+        const js = await res.json();
+        if (!js.ok) throw js;
+        return js;
+    }
 }
 
 //~ Обработчик кнопки печати документа END
