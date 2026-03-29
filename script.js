@@ -1,5 +1,6 @@
 //A- Global variables
 
+const irdg_version = "1.17.1"
 let currentRappGeneratorType = 1;
 let defaultLabel = false
 
@@ -128,6 +129,8 @@ function freshLoading(){
     loadingItem.classList.remove("onLoadItemAnimation")
     });
   }, 1500);
+  const versionName = document.querySelector('version')
+  versionName.innerText = `${irdg_version}`
 }
 //~ LOAD END 
 
