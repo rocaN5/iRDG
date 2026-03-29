@@ -69,7 +69,26 @@ callToSupport.addEventListener("click",() => {
 //~ callToSupport END
 
 //~ LOAD
-window.onload = () => {
+// window.onload = () => {
+//   showMenu()
+//   setTimeout(() => {
+//     hideMenu()
+//     const loadingWrapper = document.querySelector(".loadingWrapper")
+//     const loadingBlock = document.querySelector(".loadingBlock")
+//     const loadingBlockBlur = document.querySelector(".loadingBlock-blur")
+//     loadingBlock.style.filter = "blur(200px)"
+//     loadingBlockBlur.style.filter = "blur(200px)"
+//     setTimeout(() => {
+//       loadingWrapper.remove()
+//       setTimeout(() => {
+//         makeNotification("notification:welcomeOnWeb", "type:welcome");
+//       }, 50);
+//     }, 50);
+//   }, 50);
+// };
+
+setTimeout(() => {
+
   showMenu()
   setTimeout(() => {
     hideMenu()
@@ -80,13 +99,13 @@ window.onload = () => {
     loadingBlockBlur.style.filter = "blur(200px)"
     setTimeout(() => {
       loadingWrapper.remove()
+      freshLoading();
       setTimeout(() => {
-        freshLoading()
         makeNotification("notification:welcomeOnWeb", "type:welcome");
       }, 50);
     }, 50);
   }, 50);
-};
+}, 1500);
 
 function freshLoading(){
   onLoadItem.forEach(loadingItem =>{
@@ -4189,39 +4208,40 @@ function generatePDF() {
 
   const pdfBlob = doc.output("blob");
   const blobUrl = URL.createObjectURL(pdfBlob);
-  
+
   // 1) Сохраняем и в локальную, и в глобальную переменную
-  pdfDocumentLinkBLOB       = blobUrl;
+  pdfDocumentLinkBLOB = blobUrl;
   window.pdfDocumentLinkBLOB = blobUrl;
-  
+
   // 2) Немедленно обновляем UI (dashboardInfoText и ссылки)
   updateBlobLinks();
-  
+
   const pdfPrintLink = document.querySelector(".pdfPrint");
   if (pdfPrintLink) {
-    setTimeout(() => {
-      pdfPrintLink.href = blobUrl;
-      pdfPrintLink.target = "_blank";
-
       setTimeout(() => {
-        const pdfPrint = document.querySelector(".pdfPrint");
-        pdfPrint.innerHTML = `<i class="fa-solid fa-print fa-beat-fade"></i>`;
-        pdfPrint.removeAttribute("disabled");
+          pdfPrintLink.href = blobUrl;
+          pdfPrintLink.target = "_blank";
 
-        const printLabels = document.querySelector(".printLabels");
-        printLabels.innerHTML = `<i class="fa-solid fa-note-sticky fa-bounce"></i>`;
-        printLabels.removeAttribute("disabled");
+          setTimeout(() => {
+              const pdfPrint = document.querySelector(".pdfPrint");
+              pdfPrint.innerHTML = `<i class="fa-solid fa-print fa-beat-fade"></i>`;
+              pdfPrint.removeAttribute("disabled");
 
-      }, 50);
-    }, 2000);
+              const printLabels = document.querySelector(".printLabels");
+              printLabels.innerHTML = `<i class="fa-solid fa-note-sticky fa-bounce"></i>`;
+              printLabels.removeAttribute("disabled");
+          }, 50);
+      }, 2000);
   }
-// Читаем Blob и передаём в PDF.js
-const reader = new FileReader();
-reader.onload = function () {
-    generateHash()
-    renderPDF(new Uint8Array(reader.result)); // Теперь вызывается только один раз
-};
-reader.readAsArrayBuffer(pdfBlob);
+
+  // ✅ Исправлено: reader.onload теперь внутри generatePDF()
+  const reader = new FileReader();
+  reader.onload = function () {
+      generateHash();
+      renderPDF(new Uint8Array(reader.result));
+  };
+  reader.readAsArrayBuffer(pdfBlob);
+
 }
 
 //~ T-message and T-titleImage generation
