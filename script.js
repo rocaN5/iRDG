@@ -1,6 +1,6 @@
 //A- Global variables
 
-const irdg_version = "1.17.1"
+const irdg_version = "1.18.0_fix"
 let currentRappGeneratorType = 1;
 let defaultLabel = false
 
@@ -2107,7 +2107,7 @@ printLabels.addEventListener('click', () => {
 
 //~ Данные для генератора этикеток
 
-const directionCross_north = "СЦ Грибки";
+const directionCross_north = "СЦ МК Тарный";
 const directionCross_south = "СЦ Ростов";
 const directionCross_unknow = "Нет инфо";
 
@@ -2152,10 +2152,10 @@ const direction_to_label_names = {
   "СЦ Вологда": "unknown",
   "СЦ Волгоград": "south",
   "СЦ Смоленск": "unknown",
-  "СЦ Софьино ФФЦ": "north",
-  "СЦ Софьино Суперсклад": "north",
-  "СЦ Софьино КГТ": "north",
-  "СЦ Тарный": "north",
+  "СЦ Софьино ФФЦ": "default",
+  "СЦ Софьино Суперсклад": "default",
+  "СЦ Софьино КГТ": "default",
+  "СЦ Тарный": "default",
   "СЦ Ярославль": "unknown"
 };
 
@@ -3226,7 +3226,7 @@ ordersContainer.innerHTML = '';
         </label>
       </div>
       <button type="button" class="switchCargo pegasusTooltip" title="Поменять местами">
-        <i class="fa-solid fa-arrows-repeat"></i>
+        <i class="fa-solid fa-rotate"></i>
       </button>
 
       <div class="orderData-container">
