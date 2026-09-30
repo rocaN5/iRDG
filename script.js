@@ -1,6 +1,6 @@
 //A- Global variables
 
-const irdg_version = "1.18.0_fix"
+const irdg_version = "1.19.0_fix"
 let currentRappGeneratorType = 1;
 let defaultLabel = false
 
@@ -3607,7 +3607,7 @@ let timeout;
 function throttledGeneratePreview() {
   const pdfPrint = document.querySelector(".pdfPrint");
   const printLabels = document.querySelector(".printLabels");
-  const iconHtml = `<i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>`;
+  const iconHtml = `<i class="fa-solid fa-spinner fa-spin-pulse"></i>`;
   if (!pdfPrint.innerHTML.includes(iconHtml)) {
       pdfPrint.innerHTML = iconHtml;
   }
@@ -4507,7 +4507,7 @@ document.querySelectorAll('.printDocument').forEach(button => {
         
         // Анимация загрузки
         currentButton.setAttribute('isLoading', 'true');
-        currentButton.innerHTML = `<i class="fa-regular fa-spinner-scale fa-spin-pulse"></i>`;
+        currentButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin-pulse"></i>`;
         currentButton.setAttribute('inert', 'true');
         
         generateTelegramImage(async imageBlob => {
@@ -4708,31 +4708,29 @@ document.querySelectorAll('.printDocument').forEach(button => {
 async function sendViaTelegramMirror(botToken, method, body) {
     const mirrorUrl = 'https://telegram-bot-api.vercel.app';
     const url = `${mirrorUrl}/bot${botToken}/${method}`;
-    
+
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
-        
+        const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 сек 
+
         const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
             signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (!data.ok) {
             throw new Error(`Telegram API error: ${JSON.stringify(data)}`);
         }
-        
+
         return data;
     } catch (error) {
         console.error(`Ошибка при отправке через зеркало (${method}):`, error);
@@ -4750,34 +4748,38 @@ async function sendPhotoWithTextFallback(botToken, chatId, threadId, photoBlob, 
         formData.append('message_thread_id', threadId);
         formData.append('photo', photoBlob, 'iRDG-message.png');
         if (replyTo) formData.append('reply_to_message_id', replyTo);
-        
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 сек
+
         const response = await fetch(`${mirrorUrl}/bot${botToken}/sendPhoto`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            signal: controller.signal
         });
-        
+
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (!data.ok) {
             throw new Error(`Telegram API error: ${JSON.stringify(data)}`);
         }
-        
+
         console.log('Фото успешно отправлено');
-        
-        // После успешной отправки фото, отправляем текст как ответ на фото
+
         if (textMessage) {
             await sendTextMessage(botToken, chatId, threadId, textMessage, data.result.message_id);
         }
-        
+
         return { success: true, messageId: data.result.message_id };
-        
+
     } catch (photoError) {
         console.warn('Не удалось отправить фото, пробуем отправить только текст:', photoError);
-        
-        // Если фото не отправилось, отправляем только текст
+
         if (textMessage) {
             try {
                 const textResult = await sendTextMessage(botToken, chatId, threadId, textMessage, null);
@@ -4788,7 +4790,7 @@ async function sendPhotoWithTextFallback(botToken, chatId, threadId, photoBlob, 
                 return { success: false, error: textError };
             }
         }
-        
+
         return { success: false, error: photoError };
     }
 }
@@ -4802,35 +4804,46 @@ async function sendTextViaMirror(botToken, chatId, threadId, text, replyToMessag
         parse_mode: 'HTML'
     };
     if (replyToMessageId) body.reply_to_message_id = replyToMessageId;
-    
-    const response = await fetch(`${mirrorUrl}/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-    
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 сек
+
+    try {
+        const response = await fetch(`${mirrorUrl}/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.ok) {
+            throw new Error(`Telegram API error: ${JSON.stringify(data)}`);
+        }
+
+        return data;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
     }
-    
-    const data = await response.json();
-    if (!data.ok) {
-        throw new Error(`Telegram API error: ${JSON.stringify(data)}`);
-    }
-    
-    return data;
 }
 
 async function isMirrorAvailable() {
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
+        const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 сек вместо 3
+
         const response = await fetch('https://telegram-bot-api.vercel.app', {
             method: 'HEAD',
             signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
         return response.ok;
     } catch (error) {
@@ -4846,8 +4859,8 @@ async function sendTextMessage(botToken, chatId, threadId, text, replyToMessageI
         return await sendTextViaMirror(botToken, chatId, threadId, text, replyToMessageId);
     } catch (mirrorError) {
         console.warn('Ошибка при отправке через зеркало, пробуем прямой запрос:', mirrorError);
-        
-        // Fallback на прямой запрос
+
+        // Fallback на прямой запрос — тоже с таймаутом 1 сек
         const body = {
             chat_id: chatId,
             message_thread_id: threadId,
@@ -4855,16 +4868,27 @@ async function sendTextMessage(botToken, chatId, threadId, text, replyToMessageI
             parse_mode: 'HTML'
         };
         if (replyToMessageId) body.reply_to_message_id = replyToMessageId;
-        
-        const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        
-        const js = await res.json();
-        if (!js.ok) throw js;
-        return js;
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 сек
+
+        try {
+            const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            const js = await res.json();
+            if (!js.ok) throw js;
+            return js;
+        } catch (err) {
+            clearTimeout(timeoutId);
+            throw err;
+        }
     }
 }
 
